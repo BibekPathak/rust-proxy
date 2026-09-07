@@ -10,3 +10,4 @@ publish = false
 
 [dependencies]
 rustproxy-common = { path = "../common" }
+thiserror = { workspace = true }
