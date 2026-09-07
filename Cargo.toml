@@ -28,7 +28,7 @@ tokio-util = { version = "0.7", features = ["rt"] }
 axum = "0.7"
 tower = { version = "0.4", features = ["util"] }
 tower-http = { version = "0.5", features = ["trace", "cors"] }
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "chrono"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "macros", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
 metrics = "0.24"
 metrics-exporter-prometheus = "0.16"
