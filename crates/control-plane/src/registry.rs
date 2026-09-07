@@ -56,6 +56,9 @@ pub trait NodeRepository: Send + Sync {
     /// Force a node into the `Offline` state (used by the sweep task).
     async fn mark_offline(&self, id: &str) -> anyhow::Result<()>;
 
+    /// Set an arbitrary lifecycle state (used for health reclassification).
+    async fn set_state(&self, id: &str, state: NodeState) -> anyhow::Result<()>;
+
     /// Atomically adjust a node's active-connection count by `delta`.
     async fn adjust_active(&self, id: &str, delta: i64) -> anyhow::Result<()>;
 
@@ -200,6 +203,16 @@ impl NodeRepository for SqliteNodeRepository {
 
     async fn mark_offline(&self, id: &str) -> anyhow::Result<()> {
         sqlx::query("UPDATE nodes SET status = 'offline', updated_at = ? WHERE id = ?")
+            .bind(now_epoch())
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    async fn set_state(&self, id: &str, state: NodeState) -> anyhow::Result<()> {
+        sqlx::query("UPDATE nodes SET status = ?, updated_at = ? WHERE id = ?")
+            .bind(state.as_str())
             .bind(now_epoch())
             .bind(id)
             .execute(&self.pool)
