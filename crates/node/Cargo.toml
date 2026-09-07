@@ -1,0 +1,21 @@
+[package]
+name = "rustproxy-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Proxy node agent for RustProxy: heartbeats, forwarding, bandwidth enforcement, and draining."
+publish = false
+
+[dependencies]
+rustproxy-common = { path = "../common" }
+rustproxy-protocol = { path = "../protocol" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

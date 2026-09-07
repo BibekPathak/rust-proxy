@@ -1,0 +1,13 @@
+# Proxy node agent configuration.
+node_id = "node-1"
+control_plane_url = "http://127.0.0.1:8080"
+# api_token = "changeme"
+bind_addr = "127.0.0.1:20001"
+bandwidth_limit = 10485760   # 10 MiB/s
+max_connections = 128
+heartbeat_interval = "5s"
+upstream_timeout = "10s"
+
+[logging]
+level = "info"
+json = false
