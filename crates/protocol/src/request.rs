@@ -95,6 +95,21 @@ impl Request {
     pub fn addr_bytes(&self) -> Vec<u8> {
         self.addr.to_vec()
     }
+
+    /// Serialize a full request frame: `VER CMD RSV ATYP DST.ADDR DST.PORT`.
+    ///
+    /// Used by clients (e.g. the gateway chaining to a node) to build a
+    /// `CONNECT` request on the wire.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let addr = self.addr.to_vec();
+        let mut buf = Vec::with_capacity(REQUEST_HEADER_LEN + addr.len());
+        buf.push(VERSION);
+        buf.push(self.command.to_u8());
+        buf.push(0x00); // RSV
+        buf.push(self.addr.atyp());
+        buf.extend_from_slice(&addr);
+        buf
+    }
 }
 
 /// Compute the length (in bytes) of the address+port portion of a request

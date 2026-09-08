@@ -212,6 +212,21 @@ pub async fn get_node(
     Ok(Json(NodeResponse::from_node(&node, node.bandwidth_limit)))
 }
 
+/// Select the best eligible node to route a new connection through.
+///
+/// Returns `503 Service Unavailable` when no healthy node is available.
+pub async fn select_node(State(state): State<AppState>) -> ApiResult<NodeResponse> {
+    let node = state
+        .service
+        .select()
+        .await
+        .map_err(|e| ApiError::internal(e.to_string()))?
+        .ok_or_else(|| {
+            ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "no healthy node available")
+        })?;
+    Ok(Json(NodeResponse::from_node(&node, node.bandwidth_limit)))
+}
+
 pub async fn register_node(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -276,6 +291,7 @@ pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/nodes", get(list_nodes))
+        .route("/nodes/select", post(select_node))
         .route("/nodes/:id", get(get_node))
         .route("/nodes/register", post(register_node))
         .route("/nodes/:id/heartbeat", post(heartbeat_node))

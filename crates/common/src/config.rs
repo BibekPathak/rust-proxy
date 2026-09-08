@@ -63,6 +63,13 @@ pub struct GatewayConfig {
     /// Optional bearer token forwarded to the control plane for auth.
     #[serde(default)]
     pub api_token: Option<String>,
+    /// If set, require SOCKS5 username/password authentication with these
+    /// credentials; otherwise the gateway offers no-authentication only.
+    #[serde(default)]
+    pub socks_username: Option<String>,
+    /// Password paired with `socks_username`.
+    #[serde(default)]
+    pub socks_password: Option<String>,
     /// Maximum number of simultaneous client connections (backpressure).
     #[serde(default = "default_max_connections")]
     pub max_connections: usize,
@@ -72,6 +79,9 @@ pub struct GatewayConfig {
     /// Idle timeout after which a proxied connection is torn down.
     #[serde(with = "humantime_serde", default = "default_idle_timeout")]
     pub idle_timeout: Duration,
+    /// Optional address for an HTTP `/metrics` endpoint served by the gateway.
+    #[serde(default)]
+    pub metrics_bind_addr: Option<SocketAddr>,
     /// Logging options.
     #[serde(default)]
     pub logging: LoggingConfig,
