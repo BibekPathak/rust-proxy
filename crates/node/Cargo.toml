@@ -13,9 +13,17 @@ rustproxy-common = { path = "../common" }
 rustproxy-protocol = { path = "../protocol" }
 tokio = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+anyhow = { workspace = true }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+metrics = { workspace = true }
+metrics-exporter-prometheus = { workspace = true }
+tokio-util = { workspace = true }
+chrono = { workspace = true }
+uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
 tokio = { workspace = true }

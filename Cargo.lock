@@ -1758,13 +1758,21 @@ dependencies = [
 name = "rustproxy-node"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "chrono",
+ "metrics",
+ "metrics-exporter-prometheus",
+ "reqwest",
  "rustproxy-common",
  "rustproxy-protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.20",
  "tokio",
+ "tokio-util",
  "tracing",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
