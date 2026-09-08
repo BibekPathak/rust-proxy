@@ -1,0 +1,25 @@
+[package]
+name = "rustproxy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "RustProxy — unified binary for the SOCKS5 routing and node orchestration system."
+publish = false
+
+[[bin]]
+name = "rustproxy"
+path = "src/main.rs"
+
+[dependencies]
+rustproxy-common = { path = "../common" }
+rustproxy-control-plane = { path = "../control-plane" }
+rustproxy-gateway = { path = "../gateway" }
+rustproxy-node = { path = "../node" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+sqlx = { workspace = true }
+tokio-util = { workspace = true }

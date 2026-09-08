@@ -6,6 +6,7 @@ members = [
     "crates/control-plane",
     "crates/gateway",
     "crates/node",
+    "crates/rustproxy-bin",
 ]
 
 [workspace.package]

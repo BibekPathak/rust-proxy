@@ -1694,6 +1694,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustproxy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "rustproxy-common",
+ "rustproxy-control-plane",
+ "rustproxy-gateway",
+ "rustproxy-node",
+ "sqlx",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "rustproxy-common"
 version = "0.1.0"
 dependencies = [
