@@ -257,21 +257,31 @@ async fn read_request(
     read_exact_timeout(stream, &mut hdr, deadline).await?;
 
     let atyp = hdr[3];
-    let full_addr_len = if atyp == rustproxy_protocol::constants::atyp::DOMAIN {
-        let mut len_byte = [0u8; 1];
-        read_exact_timeout(stream, &mut len_byte, deadline).await?;
-        rustproxy_protocol::request::addr_len(atyp, Some(len_byte[0]))
-            .map_err(|e| GatewayError::Protocol(e.to_string()))?
-    } else {
-        rustproxy_protocol::request::addr_len(atyp, None)
-            .map_err(|e| GatewayError::Protocol(e.to_string()))?
-    };
+    // For a domain address the 1-byte length prefix is read here; the address
+    // buffer that follows therefore holds name + port (len + 2 bytes), and the
+    // length prefix is re-attached when assembling the full frame.
+    let (full_addr_len, addr_buf_len, domain_len) =
+        if atyp == rustproxy_protocol::constants::atyp::DOMAIN {
+            let mut len_byte = [0u8; 1];
+            read_exact_timeout(stream, &mut len_byte, deadline).await?;
+            let len = len_byte[0];
+            let total = rustproxy_protocol::request::addr_len(atyp, Some(len))
+                .map_err(|e| GatewayError::Protocol(e.to_string()))?;
+            (total, total - 1, Some(len))
+        } else {
+            let total = rustproxy_protocol::request::addr_len(atyp, None)
+                .map_err(|e| GatewayError::Protocol(e.to_string()))?;
+            (total, total, None)
+        };
 
-    let mut addr_buf = vec![0u8; full_addr_len];
+    let mut addr_buf = vec![0u8; addr_buf_len];
     read_exact_timeout(stream, &mut addr_buf, deadline).await?;
 
     let mut full = Vec::with_capacity(4 + full_addr_len);
     full.extend_from_slice(&hdr);
+    if let Some(len) = domain_len {
+        full.push(len);
+    }
     full.extend_from_slice(&addr_buf);
 
     rustproxy_protocol::Request::parse(&full)

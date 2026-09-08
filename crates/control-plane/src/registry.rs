@@ -16,6 +16,9 @@ use crate::model::{Node, NodeState};
 /// A heartbeat reported by a node agent.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Heartbeat {
+    /// The node sending the heartbeat. The control plane resolves the id from
+    /// the URL path, so it need not be present in the request body.
+    #[serde(default)]
     pub node_id: String,
     pub active_connections: u32,
     pub bytes_up: u64,

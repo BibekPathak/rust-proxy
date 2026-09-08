@@ -55,7 +55,11 @@ impl NodeServer {
         let stats = Arc::new(NodeStats::new());
 
         // 1. Register with the control plane
-        let public_address = format!("{}", self.config.bind_addr);
+        let public_address = self
+            .config
+            .advertised_address
+            .clone()
+            .unwrap_or_else(|| self.config.bind_addr.to_string());
         let reg = RegisterPayload {
             node_id: self.config.node_id.clone(),
             address: public_address,

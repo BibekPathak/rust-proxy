@@ -111,6 +111,12 @@ pub struct NodeConfig {
     pub api_token: Option<String>,
     /// Address the node listens on for gateway forwarding requests.
     pub bind_addr: SocketAddr,
+    /// Address this node advertises to the control plane for gateway
+    /// forwarding. This lets a node bind to `0.0.0.0` internally while
+    /// advertising a container/service name reachable by the gateway
+    /// (e.g. `node-1:20001`). Defaults to `bind_addr` when unset.
+    #[serde(default)]
+    pub advertised_address: Option<String>,
     /// Overall bandwidth limit in bytes/second this node may serve.
     #[serde(default = "default_bandwidth_limit")]
     pub bandwidth_limit: u64,

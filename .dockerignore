@@ -1,0 +1,11 @@
+target
+.git
+.gitignore
+*.db
+*.db-shm
+*.db-wal
+Cargo.lock.orig
+.env
+scripts
+tests
+examples

@@ -9,8 +9,22 @@ use anyhow::Result;
 use clap::Parser;
 use rustproxy_common::cli::{Cli, Command};
 use rustproxy_common::config;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
+
+/// Open the SQLite pool for a filesystem database path, creating the file if
+/// it does not yet exist. SQLx's `SqlitePool::connect` expects a `sqlite://`
+/// URL; the options-based API accepts a plain path, which is what we rely on.
+async fn open_sqlite(path: &std::path::Path) -> Result<sqlx::SqlitePool> {
+    let opts = SqliteConnectOptions::new()
+        .filename(path)
+        .create_if_missing(true);
+    Ok(SqlitePoolOptions::new()
+        .max_connections(10)
+        .connect_with(opts)
+        .await?)
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -73,7 +87,7 @@ async fn main() -> Result<()> {
             info!("starting control plane on {}", cfg.bind_addr);
 
             // Open SQLite and run migrations.
-            let pool = sqlx::SqlitePool::connect(&cfg.sqlite_path.to_string_lossy()).await?;
+            let pool = open_sqlite(&cfg.sqlite_path).await?;
             rustproxy_control_plane::registry::migrate(&pool).await?;
 
             let repo = Arc::new(rustproxy_control_plane::registry::SqliteNodeRepository::new(pool));
@@ -96,7 +110,7 @@ async fn main() -> Result<()> {
             rustproxy_common::logging::init(log_level, cfg.logging.json);
 
             info!("applying migrations to {}", cfg.sqlite_path.display());
-            let pool = sqlx::SqlitePool::connect(&cfg.sqlite_path.to_string_lossy()).await?;
+            let pool = open_sqlite(&cfg.sqlite_path).await?;
             rustproxy_control_plane::registry::migrate(&pool).await?;
             info!("migrations applied successfully");
             Ok(())

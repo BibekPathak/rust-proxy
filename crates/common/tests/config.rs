@@ -37,6 +37,21 @@ fn node_config_uses_supplied_values_and_defaults() {
     // Defaults applied:
     assert_eq!(cfg.max_connections, 128);
     assert_eq!(cfg.heartbeat_interval, std::time::Duration::from_secs(5));
+    // advertised_address defaults to None when unset.
+    assert_eq!(cfg.advertised_address, None);
+}
+
+#[test]
+fn node_config_parses_advertised_address() {
+    let raw = r#"
+        node_id = "node-a"
+        control_plane_url = "http://127.0.0.1:8080"
+        bind_addr = "0.0.0.0:20001"
+        advertised_address = "node-a:20001"
+    "#;
+    let cfg: NodeConfig = toml::from_str(raw).unwrap();
+    assert_eq!(cfg.bind_addr.to_string(), "0.0.0.0:20001");
+    assert_eq!(cfg.advertised_address.as_deref(), Some("node-a:20001"));
 }
 
 #[test]

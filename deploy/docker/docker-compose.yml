@@ -1,0 +1,78 @@
+# RustProxy single-node Docker demo.
+#
+# Topology:
+#   client ──► gateway ──► node-1 ──► target(nginx)
+#                 ▲             ▲
+#                 │             │
+#            control-plane ◄────┘  (registration + heartbeats)
+#
+# Usage:
+#   docker compose -f deploy/docker/docker-compose.yml up --build
+#   Then: curl -x socks5://127.0.0.1:1080 http://target/   (Proxying)
+#   And verify the control plane registry: curl http://127.0.0.1:8080/nodes
+
+services:
+  control-plane:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile
+    command: control-plane --config /etc/rustproxy/control-plane.toml
+    volumes:
+      - ./control-plane.toml:/etc/rustproxy/control-plane.toml:ro
+      - control-plane-data:/data
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - rustproxy-net
+
+  node-1:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile
+    command: node --config /etc/rustproxy/node.toml
+    depends_on:
+      control-plane:
+        condition: service_healthy
+    volumes:
+      - ./node.toml:/etc/rustproxy/node.toml:ro
+    networks:
+      - rustproxy-net
+
+  gateway:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile
+    command: gateway --config /etc/rustproxy/gateway.toml
+    depends_on:
+      control-plane:
+        condition: service_healthy
+      node-1:
+        condition: service_started
+    ports:
+      - "1080:1080"
+      - "19090:19090"
+    volumes:
+      - ./gateway.toml:/etc/rustproxy/gateway.toml:ro
+    networks:
+      - rustproxy-net
+
+  # Simple HTTP target served by nginx on port 80. The gateway relays to it
+  # through node-1, proving the full proxy chain.
+  target:
+    image: nginx:alpine
+    hostname: target
+    networks:
+      - rustproxy-net
+
+volumes:
+  control-plane-data:
+
+networks:
+  rustproxy-net:
+    driver: bridge

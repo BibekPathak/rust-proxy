@@ -1,0 +1,10 @@
+# Control plane configuration (Docker demo).
+bind_addr = "0.0.0.0:8080"
+sqlite_path = "/data/rustproxy.db"
+offline_timeout = "30s"
+sweep_interval = "5s"
+# api_token = "changeme"
+
+[logging]
+level = "info"
+json = true

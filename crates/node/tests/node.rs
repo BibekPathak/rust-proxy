@@ -128,6 +128,35 @@ async fn socks5_handshake(
     Ok(())
 }
 
+/// Send a SOCKS5 greeting + domain-based CONNECT ("localhost:port") through the
+/// stream. Exercises the DOMAIN address parsing path in the node handler, which
+/// historically mis-sized the address read and truncated the frame.
+async fn socks5_connect_domain(
+    stream: &mut TcpStream,
+    host: &str,
+    port: u16,
+) -> std::io::Result<()> {
+    stream.write_all(&[5, 1, 0]).await?;
+    let mut sel = [0u8; 2];
+    stream.read_exact(&mut sel).await?;
+    assert_eq!(sel[1], 0x00);
+
+    let host_bytes = host.as_bytes();
+    let mut connect = vec![5, 0x01, 0x00, 0x03, host_bytes.len() as u8];
+    connect.extend_from_slice(host_bytes);
+    connect.extend_from_slice(&port.to_be_bytes());
+    stream.write_all(&connect).await?;
+
+    let mut reply = [0u8; 10];
+    stream.read_exact(&mut reply).await?;
+    assert_eq!(
+        reply[1], 0x00,
+        "CONNECT should succeed (got {:#04x})",
+        reply[1]
+    );
+    Ok(())
+}
+
 // ── tests ──────────────────────────────────────────────────────────────────
 
 #[tokio::test]
@@ -157,6 +186,32 @@ async fn node_relay_http() {
     socks5_handshake(&mut stream, target).await.unwrap();
 
     // Send HTTP request
+    let req = "GET / HTTP/1.1\r\nHost: target\r\nConnection: close\r\n\r\n";
+    stream.write_all(req.as_bytes()).await.unwrap();
+    let mut resp = vec![0u8; 4096];
+    let n = stream.read(&mut resp).await.unwrap();
+    let resp = String::from_utf8_lossy(&resp[..n]);
+    assert!(resp.contains("200 OK"), "expected 200 OK, got: {resp}");
+    assert!(
+        resp.contains("hello from target"),
+        "expected body, got: {resp}"
+    );
+
+    shutdown.cancel();
+}
+
+#[tokio::test]
+async fn node_relay_http_domain_connect() {
+    let target = start_http_server().await;
+    let (node_addr, shutdown) = start_node(None).await;
+
+    let mut stream = TcpStream::connect(node_addr).await.unwrap();
+    // Use a domain-based CONNECT to "localhost:<port>" so the handler exercises
+    // the DOMAIN ATYP parsing path (regression: address frame size mismatch).
+    socks5_connect_domain(&mut stream, "localhost", target.port())
+        .await
+        .unwrap();
+
     let req = "GET / HTTP/1.1\r\nHost: target\r\nConnection: close\r\n\r\n";
     stream.write_all(req.as_bytes()).await.unwrap();
     let mut resp = vec![0u8; 4096];
