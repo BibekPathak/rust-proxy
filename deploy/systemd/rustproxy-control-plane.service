@@ -1,0 +1,27 @@
+[Unit]
+Description=RustProxy control plane (node registry, routing, HTTP API)
+Documentation=https://github.com/BibekP/rustproxy
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=rustproxy
+Group=rustproxy
+WorkingDirectory=/var/lib/rustproxy
+ExecStart=/usr/local/bin/rustproxy control-plane --config /etc/rustproxy/control-plane.toml
+Restart=on-failure
+RestartSec=3
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rustproxy
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
