@@ -1703,6 +1703,7 @@ dependencies = [
  "rustproxy-control-plane",
  "rustproxy-gateway",
  "rustproxy-node",
+ "serde_json",
  "sqlx",
  "tokio",
  "tokio-util",
