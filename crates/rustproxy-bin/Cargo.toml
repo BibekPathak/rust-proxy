@@ -17,6 +17,7 @@ rustproxy-common = { path = "../common" }
 rustproxy-control-plane = { path = "../control-plane" }
 rustproxy-gateway = { path = "../gateway" }
 rustproxy-node = { path = "../node" }
+rustproxy-protocol = { path = "../protocol" }
 tokio = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
